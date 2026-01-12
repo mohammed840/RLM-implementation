@@ -1,0 +1,34 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite both the original RLM paper and this implementation."
+title: "RVAA: Recursive Vision-Action Agent for Long Video Understanding"
+type: software
+authors:
+  - name: "RVAA Implementation Team"
+version: "0.1.0"
+date-released: "2025-01-12"
+license: MIT
+repository-code: "https://github.com/rvaa/rvaa"
+keywords:
+  - recursive language models
+  - long video understanding
+  - vision-action agents
+  - large language models
+
+references:
+  - type: article
+    title: "Recursive Language Models"
+    authors:
+      - family-names: Zhang
+        given-names: Michael
+      - family-names: Kraska
+        given-names: Tim
+      - family-names: Khattab
+        given-names: Omar
+    year: 2025
+    journal: "arXiv preprint arXiv:2512.24601"
+    url: "https://arxiv.org/abs/2512.24601"
+    abstract: >-
+      We introduce Recursive Language Models (RLMs), a general inference 
+      framework for language models that offloads the input context and 
+      enables language models to recursively sub-query language models 
+      before providing an output.

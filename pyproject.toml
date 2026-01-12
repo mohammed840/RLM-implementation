@@ -1,0 +1,116 @@
+[project]
+name = "rvaa"
+version = "0.1.0"
+description = "Recursive Vision-Action Agent for Long Video Understanding - Implementation inspired by RLM (arXiv:2512.24601)"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.9"
+authors = [
+    { name = "RVAA Team", email = "rvaa@example.com" }
+]
+keywords = ["video", "llm", "agent", "recursive", "long-context", "vision"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn>=0.24.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "httpx>=0.25.0",
+    "openai>=1.6.0",
+    "anthropic>=0.8.0",
+    "numpy>=1.24.0",
+    "faiss-cpu>=1.7.4",
+    "opencv-python>=4.8.0",
+    "av>=11.0.0",
+    "pillow>=10.0.0",
+    "transformers>=4.36.0",
+    "torch>=2.1.0",
+    "sse-starlette>=1.8.0",
+    "structlog>=23.2.0",
+    "tenacity>=8.2.0",
+    "python-multipart>=0.0.6",
+    "aiofiles>=23.2.0",
+    "diskcache>=5.6.0",
+    "tqdm>=4.66.0",
+    "tiktoken>=0.5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "mypy>=1.7.0",
+    "ruff>=0.1.0",
+    "black>=23.11.0",
+    "pre-commit>=3.6.0",
+    "types-aiofiles>=23.2.0",
+    "types-pillow>=10.0.0",
+]
+eval = [
+    "pandas>=2.1.0",
+    "matplotlib>=3.8.0",
+    "seaborn>=0.13.0",
+    "scikit-learn>=1.3.0",
+]
+
+[project.scripts]
+rvaa-server = "rvaa.server.api:main"
+rvaa-demo = "rvaa.demo:main"
+rvaa-eval = "rvaa.eval.run_eval:main"
+
+[project.urls]
+Homepage = "https://github.com/rvaa/rvaa"
+Documentation = "https://github.com/rvaa/rvaa#readme"
+Repository = "https://github.com/rvaa/rvaa"
+Issues = "https://github.com/rvaa/rvaa/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rvaa"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "/README.md",
+    "/LICENSE",
+]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+exclude = ["tests/"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM"]
+ignore = ["E501"]
+
+[tool.ruff.isort]
+known-first-party = ["rvaa"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-v --cov=src/rvaa --cov-report=term-missing"
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]

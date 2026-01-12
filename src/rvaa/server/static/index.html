@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RVAA - Recursive Vision-Action Agent</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-tertiary: #e9ecef;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --accent-blue: #495057;
+            --accent-purple: #495057;
+            --accent-green: #28a745;
+            --accent-orange: #868e96;
+            --accent-red: #dc3545;
+            --border-color: #dee2e6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: #495057;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .logo span {
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 24px;
+        }
+
+        .panel {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-content {
+            padding: 20px;
+        }
+
+        /* Query Input */
+        .query-section {
+            margin-bottom: 24px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 14px 18px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .btn {
+            padding: 14px 28px;
+            background: #495057;
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            background: #343a40;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Trajectory Timeline */
+        .trajectory-timeline {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .step {
+            position: relative;
+            padding-left: 40px;
+            padding-bottom: 20px;
+            border-left: 2px solid var(--border-color);
+            margin-left: 12px;
+        }
+
+        .step:last-child {
+            border-left-color: transparent;
+        }
+
+        .step-icon {
+            position: absolute;
+            left: -13px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .step-icon.code {
+            background: var(--accent-blue);
+        }
+
+        .step-icon.llm {
+            background: var(--accent-purple);
+        }
+
+        .step-icon.think {
+            background: var(--accent-orange);
+        }
+
+        .step-icon.final {
+            background: var(--accent-green);
+        }
+
+        .step-icon.error {
+            background: var(--accent-red);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .step-type {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .step-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .step-content {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 200px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .step-content.output {
+            margin-top: 8px;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            max-height: 300px;
+        }
+
+        /* Side Panel */
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .video-preview {
+            aspect-ratio: 16/9;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .stat-card {
+            background: var(--bg-tertiary);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-blue);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .evidence-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .evidence-item {
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .evidence-time {
+            font-size: 12px;
+            color: var(--accent-blue);
+            font-weight: 600;
+        }
+
+        .evidence-text {
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        /* Final Answer */
+        .final-answer {
+            background: #f8f9fa;
+            border: 1px solid #495057;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .final-answer h3 {
+            color: #495057;
+            font-size: 14px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .final-answer p {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        /* Loading */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">RV</div>
+                <div>
+                    <h1>RVAA</h1>
+                    <span>Recursive Vision-Action Agent</span>
+                </div>
+            </div>
+            <div class="status-badge">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Ready</span>
+            </div>
+        </header>
+
+        <div class="query-section">
+            <div class="input-group">
+                <input type="text" id="videoPath" placeholder="Video path (e.g., /path/to/video.mp4)">
+                <input type="text" id="queryInput" placeholder="Ask a question about the video...">
+                <button class="btn" id="runBtn" onclick="runQuery()">
+                    <span id="btnText">Run Agent</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <!-- Main Trajectory Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        Agent Trajectory
+                    </div>
+                    <span id="stepCount" style="color: var(--text-secondary); font-size: 14px;">0 steps</span>
+                </div>
+                <div class="panel-content">
+                    <div class="trajectory-timeline" id="timeline">
+                        <div style="text-align: center; color: var(--text-secondary); padding: 40px;">
+                            Enter a video path and question to start the agent
+                        </div>
+                    </div>
+
+                    <div class="final-answer" id="finalAnswer" style="display: none;">
+                        <h3>Final Answer</h3>
+                        <p id="answerText"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Side Panel -->
+            <div class="side-panel">
+                <!-- Video Preview -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            Video Preview
+                        </div>
+                    </div>
+                    <div class="panel-content" style="padding: 12px;">
+                        <video id="videoPreview"
+                            style="width: 100%; border-radius: 8px; background: var(--bg-tertiary);" controls muted>
+                            <source src="" type="video/mp4">
+                            Your browser does not support video playback
+                        </video>
+                        <div id="videoInfo" style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);">
+                            Enter a video path to preview
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            Statistics
+                        </div>
+                    </div>
+                    <div class="panel-content">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="codeExecCount">0</div>
+                                <div class="stat-label">Code Executions</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="llmCallCount">0</div>
+                                <div class="stat-label">LLM Sub-Calls</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="totalCost">$0.00</div>
+                                <div class="stat-label">Total Cost</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="elapsedTime">0s</div>
+                                <div class="stat-label">Elapsed Time</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Evidence -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            Gathered Evidence
+                        </div>
+                    </div>
+                    <div class="panel-content">
+                        <div class="evidence-list" id="evidenceList">
+                            <div style="color: var(--text-secondary); font-size: 14px;">
+                                Evidence will appear here as the agent explores the video
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Model Info -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            Model Configuration
+                        </div>
+                    </div>
+                    <div class="panel-content">
+                        <div style="font-size: 13px;">
+                            <p style="margin-bottom: 8px;"><strong>Root LM:</strong> <span
+                                    style="color: var(--accent-purple);">GPT-5</span></p>
+                            <p style="margin-bottom: 8px;"><strong>Sub LM:</strong> <span
+                                    style="color: var(--accent-blue);">GPT-5-mini</span></p>
+                            <p><strong>Paper:</strong> <a href="https://arxiv.org/abs/2512.24601"
+                                    style="color: var(--accent-blue);">arXiv:2512.24601</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let eventSource = null;
+        let startTime = null;
+        let timerInterval = null;
+        let stepCount = 0;
+        let codeExecCount = 0;
+        let llmCallCount = 0;
+        let totalCost = 0;
+
+        async function runQuery() {
+            const videoPath = document.getElementById('videoPath').value;
+            const query = document.getElementById('queryInput').value;
+
+            if (!videoPath || !query) {
+                alert('Please enter both video path and question');
+                return;
+            }
+
+            // Reset state
+            resetState();
+            setStatus('running', 'Running...');
+            document.getElementById('runBtn').disabled = true;
+            document.getElementById('btnText').innerHTML = '<div class="loading-spinner"></div>';
+
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 100);
+
+            try {
+                // Submit query
+                const response = await fetch('/query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query, video_path: videoPath })
+                });
+
+                const data = await response.json();
+
+                // Connect to SSE stream
+                eventSource = new EventSource(`/stream/${data.run_id}`);
+
+                eventSource.onmessage = (event) => {
+                    const eventData = JSON.parse(event.data);
+                    handleEvent(eventData);
+                };
+
+                eventSource.onerror = () => {
+                    eventSource.close();
+                    finishRun();
+                };
+
+            } catch (error) {
+                console.error('Error:', error);
+                setStatus('error', 'Error');
+                finishRun();
+            }
+        }
+
+        function handleEvent(event) {
+            const type = event.event_type;
+
+            if (type === 'code_execution') {
+                codeExecCount++;
+                document.getElementById('codeExecCount').textContent = codeExecCount;
+                addStep('code', 'Code Execution', event.data.code, event.data.output);
+                // Add evidence from code output
+                if (event.data.output && event.data.output.length > 10) {
+                    addEvidence(`Code ${codeExecCount}`, `${event.data.output.substring(0, 200)}...`);
+                }
+            } else if (type === 'llm_query') {
+                llmCallCount++;
+                totalCost += event.data.cost_usd || 0;
+                document.getElementById('llmCallCount').textContent = llmCallCount;
+                document.getElementById('totalCost').textContent = `$${totalCost.toFixed(4)}`;
+                addStep('llm', 'LLM Sub-Call', event.data.prompt_preview, event.data.response_preview);
+                // Add evidence from LLM response
+                if (event.data.response_preview) {
+                    addEvidence(`LLM ${llmCallCount}`, `${event.data.response_preview.replace(/<think>[\s\S]*?<\/think>/g, '').substring(0, 150)}...`);
+                }
+            } else if (type === 'evidence') {
+                // Direct evidence event
+                addEvidence(event.data.timestamp, event.data.content);
+            } else if (type === 'final_answer') {
+                showFinalAnswer(event.data.answer);
+                totalCost = event.data.total_cost_usd || totalCost;
+                document.getElementById('totalCost').textContent = `$${totalCost.toFixed(4)}`;
+                finishRun();
+            } else if (type === 'thinking') {
+                addStep('think', 'Thinking', event.data.thought);
+            } else if (type === 'error') {
+                addStep('error', 'Error', event.data.error);
+                finishRun();
+            } else if (type === 'run_end') {
+                finishRun();
+            }
+        }
+
+        function addEvidence(timestamp, content) {
+            const evidenceList = document.getElementById('evidenceList');
+
+            // Clear placeholder text on first evidence
+            if (evidenceList.querySelector('div[style*="color: var(--text-secondary)"]')) {
+                evidenceList.innerHTML = '';
+            }
+
+            const item = document.createElement('div');
+            item.className = 'evidence-item';
+            item.innerHTML = `
+                <div class="evidence-time">Step ${timestamp}</div>
+                <div class="evidence-text">${escapeHtml(content)}</div>
+            `;
+            evidenceList.appendChild(item);
+            evidenceList.scrollTop = evidenceList.scrollHeight;
+        }
+
+        function addStep(type, title, input, output = null) {
+            stepCount++;
+            document.getElementById('stepCount').textContent = `${stepCount} steps`;
+
+            const timeline = document.getElementById('timeline');
+            if (stepCount === 1) {
+                timeline.innerHTML = '';
+            }
+
+            const step = document.createElement('div');
+            step.className = 'step';
+            step.innerHTML = `
+                <div class="step-icon ${type}">${getIcon(type)}</div>
+                <div class="step-header">
+                    <span class="step-type">${title}</span>
+                    <span class="step-time">Step ${stepCount}</span>
+                </div>
+                <div class="step-content">${escapeHtml(input || '')}</div>
+                ${output ? `<div class="step-content output">${escapeHtml(output)}</div>` : ''}
+            `;
+
+            timeline.appendChild(step);
+            timeline.scrollTop = timeline.scrollHeight;
+        }
+
+        function getIcon(type) {
+            const icons = {
+                code: 'C',
+                llm: 'L',
+                think: 'T',
+                final: 'F',
+                error: '!'
+            };
+            return icons[type] || '>';
+        }
+
+        function showFinalAnswer(answer) {
+            document.getElementById('finalAnswer').style.display = 'block';
+            document.getElementById('answerText').textContent = answer;
+            addStep('final', 'Final Answer', answer);
+        }
+
+        function resetState() {
+            stepCount = 0;
+            codeExecCount = 0;
+            llmCallCount = 0;
+            totalCost = 0;
+
+            document.getElementById('stepCount').textContent = '0 steps';
+            document.getElementById('codeExecCount').textContent = '0';
+            document.getElementById('llmCallCount').textContent = '0';
+            document.getElementById('totalCost').textContent = '$0.00';
+            document.getElementById('elapsedTime').textContent = '0s';
+            document.getElementById('finalAnswer').style.display = 'none';
+            document.getElementById('timeline').innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 40px;"><div class="loading-spinner"></div><p style="margin-top: 12px;">Starting agent...</p></div>';
+            document.getElementById('evidenceList').innerHTML = '<div style="color: var(--text-secondary); font-size: 14px;">Gathering evidence...</div>';
+        }
+
+        function updateTimer() {
+            if (startTime) {
+                const elapsed = (Date.now() - startTime) / 1000;
+                document.getElementById('elapsedTime').textContent = `${elapsed.toFixed(1)}s`;
+            }
+        }
+
+        function finishRun() {
+            if (eventSource) {
+                eventSource.close();
+            }
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            setStatus('ready', 'Complete');
+            document.getElementById('runBtn').disabled = false;
+            document.getElementById('btnText').textContent = 'Run Agent';
+        }
+
+        function setStatus(status, text) {
+            const dot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+
+            statusText.textContent = text;
+
+            if (status === 'running') {
+                dot.style.background = 'var(--accent-orange)';
+            } else if (status === 'error') {
+                dot.style.background = 'var(--accent-red)';
+            } else {
+                dot.style.background = 'var(--accent-green)';
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function loadVideoPreview(videoPath) {
+            const video = document.getElementById('videoPreview');
+            const videoInfo = document.getElementById('videoInfo');
+
+            // For local files, we need to use a server endpoint
+            video.src = `/video?path=${encodeURIComponent(videoPath)}`;
+            video.load();
+
+            video.onloadedmetadata = () => {
+                const duration = (video.duration / 60).toFixed(1);
+                videoInfo.innerHTML = `<strong>${videoPath.split('/').pop()}</strong><br>Duration: ${duration} min`;
+            };
+
+            video.onerror = () => {
+                videoInfo.innerHTML = `<span style="color: var(--accent-orange);">Cannot preview local file</span><br>${videoPath.split('/').pop()}`;
+            };
+        }
+
+        // Load video preview when path changes
+        document.getElementById('videoPath').addEventListener('change', function () {
+            if (this.value) {
+                loadVideoPreview(this.value);
+            }
+        });
+
+        // Also listen for Enter key
+        document.getElementById('queryInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                runQuery();
+            }
+        });
+    </script>
+</body>
+
+</html>
