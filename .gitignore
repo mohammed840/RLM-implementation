@@ -27,9 +27,12 @@ wheels/
 
 # Virtual environments
 venv/
-env/
+/env/
 .venv/
 .env/
+
+# Explicitly include the rvaa.env package (not a virtual env!)
+!src/rvaa/env/
 
 # IDE
 .idea/
